@@ -75,6 +75,7 @@ export default function Home() {
             clearInterval(intervalIdRef.current);
         }
         if (inputRef.current) {
+            inputRef.current.disabled = false
             inputRef.current.focus()
         }
     }
