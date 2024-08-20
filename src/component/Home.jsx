@@ -64,6 +64,21 @@ export default function Home() {
         }
     }
 
+    const handleReset = () => {
+        setText('')
+        setTime(60)
+        setCurrentWordIndex(0)
+        setWordStatus([])
+        setCorrectWords(0)
+        setWrongWords(0)
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+        }
+        if (inputRef.current) {
+            inputRef.current.focus()
+        }
+    }
+
     // console.log(correctWords, wrongWords)
     useEffect(() => {
         return () => {
@@ -114,7 +129,7 @@ export default function Home() {
                                     src={reloadImage}
                                     alt=""
                                     className='px-3  rounded w-20 h-10'
-                                    onClick={() => { window.location.reload() }}
+                                    onClick={handleReset}
                                 />
                             </div>
                         </div>
