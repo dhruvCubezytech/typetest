@@ -8,7 +8,8 @@ export default function Home() {
 
     const [text, setText] = useState('')
     const [time, setTime] = useState(60)
-    const [num, setNum] = useState(0)
+    const [currentWordIndex, setCurrentWordIndex] = useState(0)
+    const [wordStatus, setWordStatus] = useState([])
     const [correctWords, setCorrectWords] = useState(0)
     const [wrongWords, setWrongWords] = useState(0)
     const intervalIdRef = useRef(null);
@@ -17,10 +18,11 @@ export default function Home() {
     const timeFunc = () => {
         intervalIdRef.current = setInterval(() => {
             setTime((prev) => {
-                if (prev - 1 <= 0) {
-                    clearInterval(intervalIdRef.current)
+                if (prev <= 1) {
+                    clearInterval(intervalIdRef.current);
+                    inputRef.current.disabled = true;
+                    return 0;
                 }
-                if (prev - 1 === 0) inputRef.current.disabled = true
                 return prev - 1
             })
         }, 1000);
@@ -31,52 +33,39 @@ export default function Home() {
         setText(value)
 
         // Start the timer if the text is being entered for the first time
-        if (value.length === '' && num === 0) {
-            console.log('please enter the character!')
-            timeFunc();
-            return
-        }
-        if (value.length === 1 && num === 0) {
+        if (value.length === 1 && currentWordIndex === 0) {
             console.log('Timer started');
             timeFunc();
         }
     }
 
-    const handleKeyDown = (e) => {
+    const handleKeySpace = (e) => {
         if (e.code === 'Space') {
             e.preventDefault();
-            if (num >= paragraph.length) {
+            if (currentWordIndex >= paragraph.length) {
                 inputRef.current.disabled = true
             } else {
                 if (text === '') return
-                setNum(num + 1)
-                setText('')
-                handleUnderline(num + 1)
-                if (text.trim() === paragraph[num]) {
+                const newWordStatus = wordStatus
+
+                if (text.trim() === paragraph[currentWordIndex]) {
                     console.log('space hit, and word is correct!')
-                    const element = document.getElementById(`${num}`)
-                    element.classList.add('text-green-500')
-                    setCorrectWords(correctWords + 1)
+                    newWordStatus[currentWordIndex] = 'correct'
+                    setCorrectWords(prev => prev + 1)
                 } else {
                     console.log('space hit, and word is Incorrect!')
-                    const element = document.getElementById(`${num}`)
-                    element.classList.add('text-red-600')
-                    setWrongWords(wrongWords + 1)
+                    newWordStatus[currentWordIndex] = 'incorrect'
+                    setWrongWords(prev => prev + 1)
                 }
+                setText('')
+                setCurrentWordIndex(prev => prev + 1)
+                setWordStatus(newWordStatus)
             }
         }
     }
 
-    const handleUnderline = (num) => {
-        if (num < paragraph.length) {
-            const element = document.getElementById(`${num}`)
-            element.classList.add('text-white')
-        }
-    }
-
-    console.log(correctWords, wrongWords)
+    // console.log(correctWords, wrongWords)
     useEffect(() => {
-        handleUnderline(num)
         return () => {
             clearInterval(intervalIdRef.current)
         }
@@ -91,10 +80,17 @@ export default function Home() {
                     <div className='justify-center'>
 
                         <div className='p-5 text-3xl font-bold text-justify bg-zinc-900 text-zinc-400  rounded'>
-                            <p className=''>
+                            <p className='w-full'>
                                 {
                                     paragraph.map((item, index) => {
-                                        return <><span key={index} id={index} className=''> {item}</span>&#160;</>
+                                        return <span
+                                            key={index}
+                                            id={index}
+                                            className={`me-2 ${wordStatus[index] === 'correct' && 'text-green-500'} ${wordStatus[index] === 'incorrect' && 'text-red-500'} ${currentWordIndex === index && 'text-white'}`}
+                                        >
+                                            {item}{' '}
+                                        </span>
+
                                     })
                                 }
                             </p>
@@ -106,12 +102,12 @@ export default function Home() {
                                 type="text"
                                 className='w-full text-xl p-2  bg-zinc-800 rounded focus:outline-none'
                                 value={text}
-                                onKeyDown={handleKeyDown}
+                                onKeyDown={handleKeySpace}
                                 onChange={handleChange}
                                 ref={inputRef}
                                 disabled={false}
                             />
-                            <button className='text-xl ms-3 w-40 px-4   bg-zinc-900 rounded'>{correctWords / 1} wpm</button>
+                            <button className='text-xl ms-3 w-40 px-4   bg-zinc-900 rounded'>{time <= 0 && `${correctWords / 1}`} wpm</button>
                             <button className='text-xl ms-3 px-8   bg-zinc-900 rounded'>{time || '0'}</button>
                             <div className='flex justify-center items-center bg-zinc-900 ms-3'>
                                 <img
